@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -34,7 +35,78 @@ const formSchema = z.object({
   }),
 })
 
-export function BookingForm() {
+export function BookingForm({ 
+  venueId, 
+  promoCode,
+  selectedDate 
+}: { 
+  venueId: string
+  promoCode?: string
+  selectedDate?: Date 
+}) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setIsSubmitting(true)
+      
+      // Create customer and validate promo code in one request
+      const customerResponse = await fetch('/api/customers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          phoneNumber: values.phone,
+          notes: values.notes || '',
+          promoCode: promoCode, // Add promo code to the request
+          bookingDate: selectedDate?.toISOString(), // Add selected date
+          venueId: venueId // Add venue ID
+        }),
+      })
+
+      if (!customerResponse.ok) {
+        const errorData = await customerResponse.json()
+        throw new Error(errorData.message || 'Failed to create customer')
+      }
+
+      const { userId, discountedPrice } = await customerResponse.json()
+
+      // Create booking with customer reference and discounted price
+      const bookingResponse = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          data: {
+            customer: userId,
+            venue: venueId,
+            notes: values.notes,
+            status: 'pending',
+            bookingDate: selectedDate?.toISOString(),
+            appliedPromoCode: promoCode,
+            finalPrice: discountedPrice
+          }
+        }),
+      })
+
+      if (!bookingResponse.ok) {
+        const errorData = await bookingResponse.json()
+        throw new Error(errorData.message || 'Failed to create booking')
+      }
+
+      form.reset()
+
+    } catch (error) {
+      console.error('Booking error:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -45,11 +117,6 @@ export function BookingForm() {
       terms: false,
     },
   })
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    // Handle payment processing here
-  }
 
   return (
     <Dialog>
@@ -140,8 +207,12 @@ export function BookingForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full">
-              Proceed to Payment
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Processing..." : "Proceed to Payment"}
             </Button>
           </form>
         </Form>
