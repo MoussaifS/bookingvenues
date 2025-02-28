@@ -54,6 +54,9 @@ export default function Venue() {
 
   return (
     <div className="min-h-screen p-6 bg-background">
+      <div className="blur">
+        <div className="blob" />
+      </div>
       <main className="container mx-auto max-w-7xl">
         {/* Header Section */}
         <div className="space-y-4 mb-8">
@@ -206,5 +209,5 @@ export default function Venue() {
         </div>
       </main>
     </div>
-  )
+  );
 }
