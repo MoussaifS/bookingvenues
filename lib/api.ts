@@ -27,3 +27,11 @@ export async function postAPI(path: string, data: any) {
   });
   return await response.json();
 }
+
+export async function getAllExperiences() {
+  const response = await fetch(`${STRAPI_API_URL}/venues`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch experiences')
+  }
+  return response.json()
+}

@@ -1,97 +1,90 @@
+'use client'
+
 import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-
-const experiences = [
-  {
-    title: "Conference Room",
-    description: "For big events",
-    price: 999,
-    monthly: {
-      amount: 41.62,
-      months: 24
-    },
-    image: "/conference-room.jpg",
-    theme: "dark"
-  },
-  {
-    title: "Meeting Room",
-    description: "For private events",
-    price: 399,
-    monthly: {
-      amount: 33.25,
-      months: 12
-    },
-    image: "/meeting-room.jpg",
-    theme: "light"
-  }
-];
+import { useEffect, useState } from 'react'
+import { getAllVenues } from "@/lib/api"
 
 export default function SelectExperience() {
+  const [experiences, setExperiences] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadExperiences() {
+      try {
+        const response = await getAllVenues()
+        setExperiences(response)
+      } catch (error) {
+        console.error('Error loading experiences:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadExperiences()
+  }, [])
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  if (!experiences?.data) return <div className="min-h-screen flex items-center justify-center">No experiences found</div>
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen px-5 py-8 sm:p-8 font-[family-name:var(--font-geist-sans)]">
       <div className="blur">
         <div className="blob" />
       </div>
-      <main className="flex flex-col gap-8 row-start-2 items-center w-full max-w-5xl">
-        <div className="flex flex-col items-center gap-8 w-full text-center">
+      <main className="flex flex-col w-full max-w-6xl mx-auto">
+        <div className="flex flex-col items-center mb-8 w-full text-center">
           <Image
             src="/logo_lamarka.svg"
             alt="lamarka logo"
-            width={180}
-            height={38}
+            width={120}
+            height={25}
+            className="mb-8 sm:mb-10"
             priority
           />
           
-          <div className="space-y-4">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Select Your Experience
+          <div className="space-y-3 max-w-[460px]">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              Choose Your Space to Create Change
             </h1>
-            <p className="text-muted-foreground text-lg">
-              Choose the perfect space for your next event
+            <p className="text-muted-foreground text-base sm:text-lg">
+              Which space will help you make your mark?
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-          {experiences.map((exp, index) => (
-            <Link href="/venue" key={index} className="block group">
-              <Card className={`h-full overflow-hidden transition-all hover:shadow-lg ${
-                exp.theme === 'dark' ? 'bg-background text-foreground' : 'bg-background/50 backdrop-blur'
-              }`}>
-                <CardHeader className="space-y-2">
-                  <CardTitle className="text-2xl font-bold">{exp.title}</CardTitle>
-                  <CardDescription className="text-base">
-                    {exp.description}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-4 w-full mb-12">
+          {experiences.data.map((exp: any, index: number) => (
+            <Link href={`/venue?id=${exp.id}`} key={exp.id} className="block group">
+              <Card className="h-full overflow-hidden transition-all hover:shadow-lg bg-background text-foreground">
+                <CardHeader className="p-6 sm:p-4">
+                  <CardTitle className="text-xl font-bold mb-2">{exp.cardTitle}</CardTitle>
+                  <CardDescription className="text-base sm:text-sm">
+                    {exp.cardDescription}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <p className="text-2xl font-semibold">
-                      From ${exp.price}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      or ${exp.monthly.amount}/mo. for {exp.monthly.months} mo.*
-                    </p>
-                  </div>
-                  <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-muted">
+                <CardContent className="p-6 sm:p-4 pt-0">
+                  <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-muted mb-6">
                     <Image
-                      src={exp.image}
-                      alt={exp.title}
+                      src={exp.image || "/placeholder.jpg"}
+                      alt={exp.name}
                       fill
                       className="object-cover transition-transform group-hover:scale-105"
                     />
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                    Learn more
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <p className="text-base sm:text-sm text-muted-foreground mb-4">
+                    {exp.CardFeatures}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xl font-semibold">
+                      From ${exp.pricePerHour}/hour
+                    </p>
+                    <div className="flex items-center gap-2 text-sm font-medium group-hover:text-foreground transition-colors">
+                      Start your journey
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -99,20 +92,16 @@ export default function SelectExperience() {
           ))}
         </div>
 
-        <p className="text-sm text-muted-foreground text-center">
-          * Financing terms apply. Monthly pricing requires approved credit.
-        </p>
+        <div className="text-center">
+          <Link
+            href="/contact"
+            className="inline-flex items-center gap-2 text-base sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Need guidance? Let's talk
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </main>
-
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <Link
-          href=""
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-        >
-          <ArrowRight className="w-4 h-4" />
-        Get in touch        
-</Link>
-      </footer>
     </div>
   );
 }
