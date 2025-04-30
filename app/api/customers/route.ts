@@ -30,16 +30,18 @@ export async function POST(request: Request) {
       throw new Error(error.error?.message || 'Failed to create customer')
     }
 
-    const data = await response.json()
+    const responseData = await response.json()
     return NextResponse.json({ 
       success: true, 
-      userId: data.data.id 
+      userId: responseData.data.id 
     })
 
-  } catch (error: any) {
+  } catch (error: Error | unknown) { // Use Error | unknown instead of any
     console.error('Customer creation error:', error)
+    // Check if it's an Error instance before accessing message
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: message },
       { status: 500 }
     )
   }

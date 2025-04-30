@@ -43,14 +43,16 @@ export async function POST(request: Request) {
       userId: data.data.id 
     })
 
-  } catch (error: any) {
+  } catch (error: Error | unknown) {
     console.error('User creation error:', error)
+    // Check if it's an Error instance before accessing message
+    const message = error instanceof Error ? error.message : 'An unknown error occurred';
     return NextResponse.json(
-      { 
-        success: false, 
-        message: error.message || 'Failed to create customer'
+      {
+        success: false,
+        message: message // Use the checked message variable
       },
       { status: 500 }
     )
-  }
+}
 }

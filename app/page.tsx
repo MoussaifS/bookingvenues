@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Calendar, Users, Sparkles, Shield } from "lucide-react";
+import { MapPin, Users, Sparkles } from "lucide-react";
 
 const features = [
 {

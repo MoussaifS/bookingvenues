@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from "react"
+import { useRouter } from 'next/navigation' // Import useRouter for redirection
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -25,6 +26,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+// Zod schema remains the same
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -35,77 +37,19 @@ const formSchema = z.object({
   }),
 })
 
-export function BookingForm({ 
-  venueId, 
+export function BookingForm({
+  venueId,
   promoCode,
-  selectedDate 
-}: { 
+  selectedDate,
+  pricePerHour // Pass pricePerHour if needed for display or logic later
+}: {
   venueId: string
   promoCode?: string
-  selectedDate?: Date 
+  selectedDate?: Date
+  pricePerHour?: number // Added optional price
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      setIsSubmitting(true)
-      
-      // Create customer and validate promo code in one request
-      const customerResponse = await fetch('/api/customers', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: values.name,
-          email: values.email,
-          phoneNumber: values.phone,
-          notes: values.notes || '',
-          promoCode: promoCode, // Add promo code to the request
-          bookingDate: selectedDate?.toISOString(), // Add selected date
-          venueId: venueId // Add venue ID
-        }),
-      })
-
-      if (!customerResponse.ok) {
-        const errorData = await customerResponse.json()
-        throw new Error(errorData.message || 'Failed to create customer')
-      }
-
-      const { userId, discountedPrice } = await customerResponse.json()
-
-      // Create booking with customer reference and discounted price
-      const bookingResponse = await fetch('/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          data: {
-            customer: userId,
-            venue: venueId,
-            notes: values.notes,
-            status: 'pending',
-            bookingDate: selectedDate?.toISOString(),
-            appliedPromoCode: promoCode,
-            finalPrice: discountedPrice
-          }
-        }),
-      })
-
-      if (!bookingResponse.ok) {
-        const errorData = await bookingResponse.json()
-        throw new Error(errorData.message || 'Failed to create booking')
-      }
-
-      form.reset()
-
-    } catch (error) {
-      console.error('Booking error:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
+  const router = useRouter() // Initialize the router
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -118,17 +62,122 @@ export function BookingForm({
     },
   })
 
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    // Check if a date is selected before submitting
+    if (!selectedDate) {
+       // Optionally use toast for user feedback
+       // toast({ title: "Please select a date", variant: "destructive" });
+       alert("Please select a date before booking."); // Simple alert fallback
+       return; // Stop submission
+    }
+
+    setIsSubmitting(true); // Start submitting state
+
+    try {
+      // Step 1: Attempt to create or find the customer
+      const customerResponse = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          phoneNumber: values.phone,
+          notes: values.notes || '',
+          // Send data needed by the customer endpoint
+          // promoCode: promoCode, // Only if customer endpoint handles it
+          // bookingDate: selectedDate?.toISOString(),
+          // venueId: venueId
+        }),
+      });
+
+      // Check if customer creation failed (network or server error)
+      // Note: We are NOT parsing specific error messages here per the request
+      if (!customerResponse.ok) {
+          // Throw a generic error to trigger the catch block
+          throw new Error(`Customer API failed with status: ${customerResponse.status}`);
+      }
+
+      const customerData = await customerResponse.json();
+      const userId = customerData?.userId; // Adjust based on your API response structure
+
+      // Ensure we got a customer ID back
+      if (!userId) {
+          throw new Error("Failed to retrieve customer ID from API response.");
+      }
+
+      // Step 2: Attempt to create the booking
+      const bookingResponse = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          // Strapi typically expects data nested under 'data'
+          data: {
+            customer: userId, // Link to the customer ID
+            venue: venueId, // Link to the venue ID
+            notes: values.notes || '', // Include notes
+            status: 'pending', // Set initial status
+            bookingDate: selectedDate.toISOString(), // Use confirmed selectedDate
+            // Add other fields your booking endpoint expects
+            // appliedPromoCode: promoCode,
+            // finalPrice: discountedPrice // If price calculation happens backend
+          }
+        }),
+      });
+
+      // Check if booking creation failed
+      if (!bookingResponse.ok) {
+          throw new Error(`Booking API failed with status: ${bookingResponse.status}`);
+      }
+
+      // --- Success ---
+      console.log("Booking submitted successfully!"); // Log success for debugging
+      // Optionally show a success message to the user
+      // toast({ title: "Booking Request Submitted!", description: "We'll be in touch soon." });
+
+      form.reset(); // Reset form fields
+      // Optionally close the dialog after success
+      // You might need to manage the Dialog's open state from the parent component
+      // or use a ref if keeping it self-contained.
+
+    } catch (error) {
+      // --- Failure ---
+      console.error('Booking submission error:', error); // Log the error for debugging
+
+      // Redirect to contact page on ANY error during the try block
+      router.push('/contact');
+
+    } finally {
+      // Ensure the submitting state is turned off whether success or failure
+      setIsSubmitting(false);
+    }
+  }
+
+
   return (
+    // Dialog and Form structure remains largely the same
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="w-full">Book Now</Button>
+        {/* Disable trigger button if no date is selected */}
+        <Button className="w-full" disabled={!selectedDate}>
+            {selectedDate ? "Request Booking" : "Select a Date First"}
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Complete Your Booking</DialogTitle>
+          <DialogTitle>Complete Your Booking Request</DialogTitle>
+          <div>
+            Fill in your details below. We'll confirm availability and payment afterwards.
+          </div>
         </DialogHeader>
+        {/* Display selected date prominently */}
+        {selectedDate && (
+            <div className="text-sm font-medium p-2 bg-secondary rounded-md text-center">
+                Booking for: {selectedDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* FormField for name */}
             <FormField
               control={form.control}
               name="name"
@@ -136,12 +185,13 @@ export function BookingForm({
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Your Name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {/* FormField for email */}
             <FormField
               control={form.control}
               name="email"
@@ -149,12 +199,13 @@ export function BookingForm({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="john@example.com" type="email" {...field} />
+                    <Input placeholder="you@example.com" type="email" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {/* FormField for phone */}
             <FormField
               control={form.control}
               name="phone"
@@ -162,21 +213,23 @@ export function BookingForm({
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="+1 (555) 000-0000" {...field} />
+                    <Input placeholder="Best contact number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+            {/* FormField for notes */}
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Additional Notes</FormLabel>
+                  <FormLabel>Additional Notes (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Any special requirements or requests..."
+                      placeholder="Any special requirements, e.g., setup time, specific equipment needed..."
+                      className="resize-none" // prevent resizing
                       {...field}
                     />
                   </FormControl>
@@ -184,35 +237,39 @@ export function BookingForm({
                 </FormItem>
               )}
             />
+            {/* FormField for terms */}
             <FormField
               control={form.control}
               name="terms"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
+                      id="terms" // Add id for label association
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
+                    <FormLabel htmlFor="terms" className="cursor-pointer"> {/* Associate label */}
                       I agree to the terms and conditions
                     </FormLabel>
                     <FormDescription>
-                      By proceeding, you agree to our booking terms and cancellation policy.
+                      {/* You could link to actual terms here */}
+                      Review our booking terms and policies before proceeding.
                     </FormDescription>
                   </div>
-                  <FormMessage />
+                  <FormMessage className="mt-0!" /> {/* Adjust message positioning if needed */}
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
+            {/* Submit Button */}
+            <Button
+              type="submit"
               className="w-full"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !selectedDate} // Also disable if no date
             >
-              {isSubmitting ? "Processing..." : "Proceed to Payment"}
+              {isSubmitting ? "Processing..." : "Submit Booking Request"}
             </Button>
           </form>
         </Form>
