@@ -43,6 +43,7 @@ const nextConfig: NextConfig = {
     ],
   },
   reactStrictMode: true, // Good practice to enable
+  output: 'standalone',
 };
 
 export default nextConfig;
