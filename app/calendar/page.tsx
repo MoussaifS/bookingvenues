@@ -1,50 +1,45 @@
 import { Navbar } from "@/components/ui/navbar";
-import { Button } from "@/components/ui/button"; // Import Button
-import { Info, ExternalLink, Linkedin } from "lucide-react"; // Import Linkedin icon
-import Link from "next/link";
+import { Construction } from "lucide-react";
+import { DemoEventList } from "./components/demo-event-list"; // Ensure this import is correct
 
-export default function ContactPage() {
+// Remove unused imports like Button, Card, etc. if they are no longer used directly here
+
+export default function CalendarPage() {
   return (
     <div className="flex flex-col min-h-screen font-[family-name:var(--font-geist-sans)]">
       <Navbar />
-      <main className="flex flex-1 flex-col items-center justify-center p-8 text-center gap-6">
-        
-        {/* Added LinkedIn Button Link */}
-        <Link
-          href="https://www.linkedin.com/in/souhail-mousssaif/"
-          target="_blank"
-          rel="noopener noreferrer"
-          passHref // Recommended when wrapping custom components like Button
-        >
-          <Button variant="outline"> {/* Using outline variant for visual distinction */}
-            <Linkedin className="h-4 w-4 mr-2" /> {/* Added icon */}
-            Connect on LinkedIn
-          </Button>
-        </Link>
-        
-        {/* Existing Info Icon and Text */}
-        <Info className="w-16 h-16 text-muted-foreground mt-4" /> {/* Added small top margin */}
-        <h1 className="text-3xl font-bold tracking-tight">About This Demo</h1>
-        <p className="text-muted-foreground max-w-lg">
-          Please note: This website is a visual demonstration showcasing a potential technology tool designed to enhance Lamarka's venue booking workflow. All images, logos, and names associated with Lamarka are used here solely for illustrative purposes and belong to Lamarka.
-        </p>
-        <p className="text-muted-foreground max-w-lg">
-          This is not the official Lamarka website.
-        </p>
-        
-        {/* Existing Official Website Link */}
-        <Link
-          href="https://www.lamarka.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-        >
-          Visit Official Lamarka Website
-          <ExternalLink className="h-4 w-4" />
-        </Link>
+
+      {/* Main content area */}
+      <main className="flex-1 px-4 py-8 md:px-8 md:py-12">
+        <div className="max-w-5xl mx-auto">
+
+          {/* Under Construction Message */}
+          <div className="flex flex-col items-center justify-center text-center gap-6 mb-12 md:mb-16">
+            <Construction className="w-16 h-16 text-muted-foreground" />
+            <h1 className="text-3xl font-bold tracking-tight">Calendar Coming Soon!</h1>
+            <p className="text-muted-foreground max-w-xl">
+              The Calendar page is currently being built! Soon, this space will showcase upcoming public events hosted at Lamarka venues, created by both users and our team. You'll be able to browse and reserve spots, similar to platforms like Luma.
+            </p>
+          </div>
+
+          {/* --- Demo Section --- */}
+          <div className="border-t pt-8 mt-8">
+            <h2 className="text-2xl font-semibold tracking-tight text-center mb-8">
+              Here's a glimpse of what's coming...
+            </h2>
+
+            {/* Render the Client Component */}
+            <DemoEventList />
+
+          </div>
+          {/* --- End Demo Section --- */}
+
+        </div>
       </main>
-      <footer className="p-4 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Demo Project.
+
+      {/* Footer */}
+      <footer className="p-4 text-center text-sm text-muted-foreground border-t">
+        © {new Date().getFullYear()} Lamarka. All rights reserved.
       </footer>
     </div>
   );

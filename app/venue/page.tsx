@@ -97,6 +97,33 @@ const mockVenueDetails: { [key: string]: Venue } = {
     publishedAt: "2025-04-30T11:34:10.580Z",
     images: [], // Add mock image objects here if needed
   },
+  "g642gvihycua2ntbwbu7qrxk": { // Grand Conference Hall
+    id: 13,
+    documentId: "g642gvihycua2ntbwbu7qrxk",
+    name: "Grand Conference Hall",
+    description: "Spacious conference venue ideal for large corporate events, seminars, and workshops. Features high ceilings, modular space design, and state-of-the-art AV equipment.",
+    capacity: 200,
+    pricePerHour: 250,
+    setupOptions: {
+      layouts: ["theater", "classroom", "banquet", "exhibition", "reception"],
+      defaultSetup: "theater",
+      availableEquipment: ["professional sound system", "stage lighting", "dual projectors", "wireless microphones", "podium"],
+    },
+    amenities: {
+      included: ["high-speed wifi", "registration desk", "breakout areas", "coat check", "climate control", "backup generator"],
+      additionalServices: ["full-service catering", "event planning assistance", "AV technician", "security personnel"],
+    },
+    rules: "- Minimum booking: 4 hours\n- 72-hour cancellation policy\n- Outside catering subject to approval\n- Security deposit required\n- Insurance certificate required for events over 100 people",
+    slug: "grand-conference-hall",
+    cardTitle: "Grand Conference Hall", // Not directly used on this page
+    cardDescription: "Versatile conference space...", // Not directly used on this page
+    cardFeatures: "Full AV Setup | Catering | Event Support", // Not directly used on this page
+    spaceType: "conference", // Corrected typo
+    createdAt: "2025-03-02T00:52:50.538Z",
+    updatedAt: "2025-04-30T13:37:32.767Z",
+    publishedAt: "2025-04-30T13:37:32.776Z",
+    images: [], // Add mock image objects here if needed
+  },
   "vbjloesj4wtsklknq7mmv1ej": { // Executive Meeting Room A
     id: 12,
     documentId: "vbjloesj4wtsklknq7mmv1ej",
@@ -124,33 +151,7 @@ const mockVenueDetails: { [key: string]: Venue } = {
     publishedAt: "2025-04-30T13:37:18.531Z",
     images: [], // Add mock image objects here if needed
   },
-  "g642gvihycua2ntbwbu7qrxk": { // Grand Conference Hall
-    id: 13,
-    documentId: "g642gvihycua2ntbwbu7qrxk",
-    name: "Grand Conference Hall",
-    description: "Spacious conference venue ideal for large corporate events, seminars, and workshops. Features high ceilings, modular space design, and state-of-the-art AV equipment.",
-    capacity: 200,
-    pricePerHour: 250,
-    setupOptions: {
-      layouts: ["theater", "classroom", "banquet", "exhibition", "reception"],
-      defaultSetup: "theater",
-      availableEquipment: ["professional sound system", "stage lighting", "dual projectors", "wireless microphones", "podium"],
-    },
-    amenities: {
-      included: ["high-speed wifi", "registration desk", "breakout areas", "coat check", "climate control", "backup generator"],
-      additionalServices: ["full-service catering", "event planning assistance", "AV technician", "security personnel"],
-    },
-    rules: "- Minimum booking: 4 hours\n- 72-hour cancellation policy\n- Outside catering subject to approval\n- Security deposit required\n- Insurance certificate required for events over 100 people",
-    slug: "grand-conference-hall",
-    cardTitle: "Grand Conference Hall", // Not directly used on this page
-    cardDescription: "Versatile conference space...", // Not directly used on this page
-    cardFeatures: "Full AV Setup | Catering | Event Support", // Not directly used on this page
-    spaceType: "conference", // Corrected typo
-    createdAt: "2025-03-02T00:52:50.538Z",
-    updatedAt: "2025-04-30T13:37:32.767Z",
-    publishedAt: "2025-04-30T13:37:32.776Z",
-    images: [], // Add mock image objects here if needed
-  }
+  
 };
 // --- END MOCK VENUE DETAILS ---
 
