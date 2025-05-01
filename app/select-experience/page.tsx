@@ -1,133 +1,113 @@
-'use client'
+// Ensure this file is placed correctly in your project, e.g., app/select-experience/page.tsx or similar
+
+'use client' // Necessary for client-side interactions like Link clicks
 
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"; // Adjust path if needed
 import { ArrowRight } from "lucide-react";
-import { useEffect, useState } from 'react'
-import { getAllVenues } from "@/lib/api"
 
-// Define interfaces for the image structure from the API
-interface ImageFormat {
-  url: string;
-  width?: number;
-  height?: number;
-}
+// --- Mock Data (Unchanged) ---
+const mockVenueData = [
+    {
+        "id": 10,
+        "documentId": "rn3uij5x3ee3mxldladrisu7",
+        "name": "Executive Meeting Room B",
+        "description": "Modern, well-lit conference room with seating for 10...",
+        "capacity": 20,
+        "pricePerHour": 75,
+        "setupOptions": { /* Omitted for brevity */ },
+        "amenities": { /* Omitted for brevity */ },
+        "rules": "- Minimum booking: 1 hour\n- 24-hour cancellation policy...",
+        "slug": "executive-meeting-room-b",
+        "cardTitle": "Executive Meeting Room B",
+        "cardDescription": "Bright, modern meeting room for up to 10 guests. Includes smart TV, whiteboard, flipchart, and fast Wi-Fi—ideal for team sessions and presentations.",
+        "cardFeatures": "Video conferencing | Projector | Catering Available",
+        "spaceType": "meeting room",
+        "createdAt": "2025-04-30T11:29:27.106Z",
+        "updatedAt": "2025-04-30T11:34:10.565Z",
+        "publishedAt": "2025-04-30T11:34:10.580Z"
+    },
+    {
+        "id": 12,
+        "documentId": "vbjloesj4wtsklknq7mmv1ej",
+        "name": "Executive Meeting Room A",
+        "description": "Stylish lounge space with plush seating...",
+        "capacity": 12,
+        "pricePerHour": 75,
+        "setupOptions": { /* Omitted for brevity */ },
+        "amenities": { /* Omitted for brevity */ },
+        "rules": "- Minimum booking: 1 hour\n- 24-hour cancellation policy...",
+        "slug": "executive-meeting-room-a",
+        "cardTitle": "Executive Meeting Room", // Use this for filename
+        "cardDescription": "Stylish lounge space with plush seating, ideal for casual meetings or relaxed breakout sessions. Includes bottled water, coffee table, and ambient lighting.",
+        "cardFeatures": "Video conferencing | Projector | Catering Available",
+        "spaceType": "meeting room",
+        "createdAt": "2025-03-02T00:52:28.680Z",
+        "updatedAt": "2025-04-30T13:37:18.515Z",
+        "publishedAt": "2025-04-30T13:37:18.531Z"
+    },
+    {
+        "id": 13,
+        "documentId": "g642gvihycua2ntbwbu7qrxk",
+        "name": "Grand Conference Hall",
+        "description": "Spacious conference venue ideal for large corporate events...",
+        "capacity": 200,
+        "pricePerHour": 250,
+        "setupOptions": { /* Omitted for brevity */ },
+        "amenities": { /* Omitted for brevity */ },
+        "rules": "- Minimum booking: 4 hours\n- 72-hour cancellation policy...",
+        "slug": "grand-conference-hall",
+        "cardTitle": "Grand Conference Hall",
+        "cardDescription": "Versatile conference space for up to 200 guests",
+        "cardFeatures": "Full AV Setup | Catering | Event Support",
+        "spaceType": "confrence",
+        "createdAt": "2025-03-02T00:52:50.538Z",
+        "updatedAt": "2025-04-30T13:37:32.767Z",
+        "publishedAt": "2025-04-30T13:37:32.776Z"
+    }
+];
+// --- End Mock Data ---
 
-interface ImageFormats {
-  thumbnail?: ImageFormat;
-  small?: ImageFormat;
-  medium?: ImageFormat;
-  large?: ImageFormat;
-}
-
-interface ImageObject {
+// --- Venue Interface (Unchanged) ---
+interface Venue {
   id: number;
-  name: string;
-  alternativeText: string | null;
-  caption: string | null;
-  width?: number;
-  height?: number;
-  formats?: ImageFormats; // Make formats optional
-  url: string; // Original image URL
-  provider_metadata?: any; // Add other fields if needed
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-}
-
-// Update the Experience interface
-interface Experience {
-  id: string;
+  documentId: string;
   name: string;
   cardTitle: string;
   cardDescription: string;
-  images: ImageObject[]; // Images array
-  cardFeatures: string; // Corrected casing based on API response
+  cardFeatures: string;
   pricePerHour: number;
-  // Add any other relevant fields from your API response if needed
-  description?: string;
-  capacity?: number;
-  slug?: string | null;
-  documentId: string;
-  // ... other fields
 }
 
-// ExperienceResponse interface remains the same if getAllVenues returns { data: Experience[] }
-interface ExperienceResponse {
-  data: Experience[];
-}
-
-// --- Helper Function to get Image URL ---
-// You might want to move this to a utils file
-const getImageUrl = (image: ImageObject | undefined): string => {
-  const placeholder = "/placeholder.jpg";
-  if (!image) return placeholder;
-
-  // Use the correct environment variable name from your .env file
-  // CHANGED HERE: Using NEXT_PUBLIC_STRAPI_API_URL instead of NEXT_PUBLIC_API_URL
-  const apiBaseUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL || '';
-
-  // Prioritize formats: medium -> small -> thumbnail -> original URL
-  const preferredUrl =
-    image.formats?.medium?.url ||
-    image.formats?.small?.url ||
-    image.formats?.thumbnail?.url ||
-    image.url;
-
-  if (!preferredUrl) return placeholder; // Fallback if no URL found
-
-  // Prepend the base URL if the URL is relative (starts with '/')
-  // Adjust this logic if your API provides full URLs already
-  return preferredUrl.startsWith('/') ? `${apiBaseUrl}${preferredUrl}` : preferredUrl;
+// Helper function to generate image path from title
+const getImagePathFromTitle = (title: string): string => {
+  if (!title) {
+    // Fallback if title is missing for some reason
+    return "/placeholder-venue.jpg"; // Keep a placeholder just in case
+  }
+  const filename = title + '.jpg'; // Replaces spaces with hyphens, converts to lowercase, appends .jpg
+  return `/${filename}`; // Prepends slash for root public directory
 };
-// --- End Helper Function ---
 
 
 export default function SelectExperience() {
-  const [experiences, setExperiences] = useState<ExperienceResponse | null>(null)
-  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    async function loadExperiences() {
-      try {
-        // Make sure getAllVenues returns data structured as ExperienceResponse
-        // If it returns just the array, adjust accordingly
-        const response = await getAllVenues();
-        // Basic type check (you might want more robust validation)
-        if (response && Array.isArray(response.data)) {
-           setExperiences(response as ExperienceResponse);
-        } else {
-            // Handle case where response is not as expected, e.g., return just the array
-            // setExperiences({ data: response }); // Uncomment if getAllVenues returns just the array
-            console.error('Unexpected response structure from getAllVenues:', response);
-            setExperiences(null); // Set to null or empty data
-        }
-      } catch (error) {
-        console.error('Error loading experiences:', error)
-        setExperiences(null); // Set to null on error
-      } finally {
-        setLoading(false)
-      }
-    }
+  // Removed placeholderImageUrl variable
 
-    loadExperiences()
-  }, [])
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-  // Adjusted check for potentially null experiences or empty data array
-  if (!experiences?.data || experiences.data.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center">No experiences found</div>
-  }
+  // Directly use the mock data - no fetching or state needed
+  const experiences: Venue[] = mockVenueData;
 
   return (
     <div className="grid grid-rows-[auto_1fr_auto] items-center justify-items-center min-h-screen px-5 py-8 sm:p-8 font-[family-name:var(--font-geist-sans)]">
-      <div className="blur">
+      {/* Optional: Keep background blur if desired */}
+      {/* <div className="blur">
         <div className="blob" />
-      </div>
+      </div> */}
       <main className="flex flex-col w-full max-w-6xl mx-auto">
-        {/* Header remains the same */}
+        {/* Header */}
          <div className="flex flex-col items-center mb-8 w-full text-center">
+          {/* Make sure the logo exists in /public/logo_lamarka.svg */}
           <Image
             src="/logo_lamarka.svg"
             alt="lamarka logo"
@@ -146,47 +126,50 @@ export default function SelectExperience() {
           </div>
         </div>
 
-
+        {/* Venue Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-4 w-full mb-12">
-          {experiences.data.map((exp: Experience) => {
-            // Get the first image object, if available
-            const firstImage = exp.images?.[0];
-            // Use the helper function to get the final URL
-            const imageUrl = getImageUrl(firstImage);
-            // Determine alt text: use provided alt text, fallback to venue name
-            const imageAlt = firstImage?.alternativeText || exp.name || "Venue image";
+          {experiences.map((venue: Venue, index: number) => { // Added index for priority loading
+            // Generate image path using the helper function
+            const imageUrl = getImagePathFromTitle(venue.cardTitle);
+            // Use venue name or title for alt text as a fallback
+            const imageAlt = venue.cardTitle || venue.name || "Venue image";
 
             return (
-              <Link href={`/venue?id=${exp.documentId}`} key={exp.documentId} className="block group">
+              // Link wraps the entire card, navigating on click
+              // Passes documentId as 'id' query parameter to the /venue page
+              <Link href={`/venue?id=${venue.documentId}`} key={venue.documentId} className="block group">
                 <Card className="h-full overflow-hidden transition-all hover:shadow-lg bg-background text-foreground">
                   <CardHeader className="p-6 sm:p-4">
-                    <CardTitle className="text-xl font-bold mb-2">{exp.cardTitle}</CardTitle>
+                    <CardTitle className="text-xl font-bold mb-2">{venue.cardTitle}</CardTitle>
                     <CardDescription className="text-base sm:text-sm">
-                      {exp.cardDescription}
+                      {venue.cardDescription}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-6 sm:p-4 pt-0">
-                    {/* This div needs position: relative for the fill Image */}
+                    {/* Image Section - Now uses dynamic imageUrl */}
                     <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-muted mb-6">
                       <Image
-                        src={imageUrl} // Use the derived image URL
-                        alt={imageAlt} // Use derived alt text
-                        fill // Make image fill the container
+                        src={imageUrl} // Use the generated image path
+                        alt={imageAlt}
+                        fill
                         className="object-cover transition-transform group-hover:scale-105"
-                        sizes="(max-width: 640px) 100vw, 50vw" // Optimization for responsive images
-                        priority={exp.id === experiences.data[0].id || exp.id === experiences.data[1].id} // Prioritize loading first few images
+                        sizes="(max-width: 640px) 100vw, 50vw"
+                        priority={index < 2} // Prioritize loading the first two images
+                        // Optional: Add error handling if needed
+                        // onError={(e) => { e.currentTarget.src = '/placeholder-venue.jpg'; }} // Fallback to placeholder on error
                       />
                     </div>
+                    {/* Features Text */}
                     <p className="text-base sm:text-sm text-muted-foreground mb-4">
-                      {exp.cardFeatures} {/* Use correct property name */}
+                      {venue.cardFeatures}
                     </p>
+                    {/* Price and Link Indication */}
                     <div className="flex items-center justify-between">
-                  
                       <p className="text-xl font-semibold">
-                        From {exp.pricePerHour} SAR/hour
+                        From {venue.pricePerHour} SAR/hour
                       </p>
-                      <div className="flex items-center gap-2 text-sm font-medium group-hover:text-foreground transition-colors">
-                        Start your journey
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                        View Details
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
@@ -197,8 +180,9 @@ export default function SelectExperience() {
           })}
         </div>
 
-        {/* Footer link remains the same */}
+        {/* Footer link */}
          <div className="text-center">
+          {/* Ensure you have a /contact page or adjust href */}
           <Link
             href="/contact"
             className="inline-flex items-center gap-2 text-base sm:text-sm text-muted-foreground hover:text-foreground transition-colors"

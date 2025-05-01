@@ -1,18 +1,17 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { Suspense, useState } from 'react' // Removed useEffect
 import { useSearchParams } from 'next/navigation'
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
-import { Users, Clock, Wifi, Tv, ParkingCircle, Utensils, Wind, CheckSquare } from "lucide-react" // Added CheckSquare for rules
-import { BookingForm } from "./components/booking-form"
-import { getVenue } from "@/lib/api"
-// import { Input } from "@/components/ui/input"
+import { Users, Clock, Wifi, Tv, ParkingCircle, Utensils, Wind, CheckSquare } from "lucide-react"
+import { BookingForm } from "./components/booking-form" // Assuming this path is correct
+// Removed: import { getVenue } from "@/lib/api"
 
-// --- Image Interfaces ---
+// --- Image Interfaces (Keep as they define structure) ---
 interface ImageFormat {
   url: string;
   width?: number;
@@ -38,46 +37,132 @@ interface ImageObject {
 }
 // --- End Image Interfaces ---
 
-// --- Updated Venue Interface - Reflecting the API response structure ---
+// --- Venue Interface (Keep as it defines structure) ---
 interface Venue {
-  id: number; // ID is a number in the data
+  id: number; // Unique numeric ID from the data
+  documentId: string; // Unique string ID used for lookup
   name: string;
   description: string;
   capacity: number;
   pricePerHour: number;
-  setupOptions: { // Object type
+  setupOptions: {
     layouts?: string[];
     defaultSetup?: string;
     availableEquipment?: string[];
   };
-  amenities: { // Object type
+  amenities: {
     included?: string[];
     additionalServices?: string[];
   };
-  rules: string; // String, potentially with newlines
+  rules: string;
   slug: string | null;
-  cardTitle: string;
-  cardDescription: string;
-  cardFeatures: string;
+  cardTitle: string; // Keep if needed elsewhere, though not used directly here
+  cardDescription: string; // Keep if needed elsewhere
+  cardFeatures: string; // Keep if needed elsewhere
   spaceType: string;
   createdAt: string;
   updatedAt: string;
   publishedAt: string;
-  images?: ImageObject[]; // **IMPORTANT**: Make images optional as it's missing in sample data
-  // Add other fields if they exist in your full response
+  images?: ImageObject[]; // Keep optional for images
 }
 
-// Interface for the API response for a single venue
-interface VenueResponse {
-  data: Venue; // Single venue object wrapped in 'data'
-  meta?: any;
-}
+// --- MOCK VENUE DETAILS ---
+// Keyed by the 'documentId' that will be passed in the URL (?id=...)
+// Use the full details for each venue here.
+const mockVenueDetails: { [key: string]: Venue } = {
+  "rn3uij5x3ee3mxldladrisu7": { // Executive Meeting Room B
+    id: 10,
+    documentId: "rn3uij5x3ee3mxldladrisu7",
+    name: "Executive Meeting Room B",
+    description: "Modern, well-lit conference room with seating for 10, equipped with a large screen, whiteboard, flipchart, and high-speed Wi-Fi—perfect for meetings, presentations, and team sessions.",
+    capacity: 10, // Adjusted capacity to match description better
+    pricePerHour: 75,
+    setupOptions: {
+      layouts: ["boardroom", "u-shape", "classroom"],
+      defaultSetup: "boardroom",
+      availableEquipment: ["smartTV", "videoconference", "whiteboard", "flipchart"],
+    },
+    amenities: {
+      included: ["high-speed wifi", "bottled water", "climate control", "whiteboard markers", "natural lighting"],
+      additionalServices: ["catering available", "printing services"],
+    },
+    rules: "- Minimum booking: 1 hour\n- 24-hour cancellation policy\n- No food allowed except arranged catering\n- Please leave the room as you found it",
+    slug: "executive-meeting-room-b",
+    cardTitle: "Executive Meeting Room B", // Not directly used on this page
+    cardDescription: "Bright, modern meeting room...", // Not directly used on this page
+    cardFeatures: "Video conferencing | Projector | Catering Available", // Not directly used on this page
+    spaceType: "meeting room",
+    createdAt: "2025-04-30T11:29:27.106Z",
+    updatedAt: "2025-04-30T11:34:10.565Z",
+    publishedAt: "2025-04-30T11:34:10.580Z",
+    images: [], // Add mock image objects here if needed
+  },
+  "vbjloesj4wtsklknq7mmv1ej": { // Executive Meeting Room A
+    id: 12,
+    documentId: "vbjloesj4wtsklknq7mmv1ej",
+    name: "Executive Meeting Room A",
+    description: "Stylish lounge space with plush seating, ideal for casual meetings or relaxed breakout sessions. Includes bottled water, coffee table, and ambient lighting.",
+    capacity: 12,
+    pricePerHour: 75,
+    setupOptions: {
+      layouts: ["casual seating", "lounge"],
+      defaultSetup: "lounge",
+      availableEquipment: ["smartTV", "whiteboard", "glass writing wall"],
+    },
+    amenities: {
+      included: ["high-speed wifi", "bottled water", "comfortable lounge seating", "climate control", "natural lighting"],
+      additionalServices: ["catering available", "printing services"],
+    },
+    rules: "- Minimum booking: 1 hour\n- 24-hour cancellation policy\n- No food allowed except arranged catering\n- Please leave the room as you found it",
+    slug: "executive-meeting-room-a",
+    cardTitle: "Executive Meeting Room", // Not directly used on this page
+    cardDescription: "Stylish lounge space...", // Not directly used on this page
+    cardFeatures: "Video conferencing | Projector | Catering Available", // Not directly used on this page
+    spaceType: "meeting room",
+    createdAt: "2025-03-02T00:52:28.680Z",
+    updatedAt: "2025-04-30T13:37:18.515Z",
+    publishedAt: "2025-04-30T13:37:18.531Z",
+    images: [], // Add mock image objects here if needed
+  },
+  "g642gvihycua2ntbwbu7qrxk": { // Grand Conference Hall
+    id: 13,
+    documentId: "g642gvihycua2ntbwbu7qrxk",
+    name: "Grand Conference Hall",
+    description: "Spacious conference venue ideal for large corporate events, seminars, and workshops. Features high ceilings, modular space design, and state-of-the-art AV equipment.",
+    capacity: 200,
+    pricePerHour: 250,
+    setupOptions: {
+      layouts: ["theater", "classroom", "banquet", "exhibition", "reception"],
+      defaultSetup: "theater",
+      availableEquipment: ["professional sound system", "stage lighting", "dual projectors", "wireless microphones", "podium"],
+    },
+    amenities: {
+      included: ["high-speed wifi", "registration desk", "breakout areas", "coat check", "climate control", "backup generator"],
+      additionalServices: ["full-service catering", "event planning assistance", "AV technician", "security personnel"],
+    },
+    rules: "- Minimum booking: 4 hours\n- 72-hour cancellation policy\n- Outside catering subject to approval\n- Security deposit required\n- Insurance certificate required for events over 100 people",
+    slug: "grand-conference-hall",
+    cardTitle: "Grand Conference Hall", // Not directly used on this page
+    cardDescription: "Versatile conference space...", // Not directly used on this page
+    cardFeatures: "Full AV Setup | Catering | Event Support", // Not directly used on this page
+    spaceType: "conference", // Corrected typo
+    createdAt: "2025-03-02T00:52:50.538Z",
+    updatedAt: "2025-04-30T13:37:32.767Z",
+    publishedAt: "2025-04-30T13:37:32.776Z",
+    images: [], // Add mock image objects here if needed
+  }
+};
+// --- END MOCK VENUE DETAILS ---
 
-// --- Helper Function to get Image URL ---
+
+// --- Helper Function to get Image URL (remains useful for consistency/placeholders) ---
 const getImageUrl = (image: ImageObject | undefined): string => {
-  const placeholder = "/placeholder.jpg"; // Your placeholder image
+  // **IMPORTANT**: Ensure placeholder.jpg exists in your /public folder
+  const placeholder = "/placeholder.jpg";
   if (!image) return placeholder;
-  const apiBaseUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL || '';
+
+  // If you add full URLs to mock data images, remove the apiBaseUrl logic
+  const apiBaseUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL || ''; // Keep if mock images use relative paths
 
   const preferredUrl =
     image.formats?.medium?.url ||
@@ -86,11 +171,12 @@ const getImageUrl = (image: ImageObject | undefined): string => {
     image.url;
 
   if (!preferredUrl) return placeholder;
+  // Adjust if your mock image URLs are absolute or relative
   return preferredUrl.startsWith('/') ? `${apiBaseUrl}${preferredUrl}` : preferredUrl;
 };
 // --- End Helper Function ---
 
-// --- Helper Function for Amenities Icons ---
+// --- Helper Function for Amenities Icons (Unchanged) ---
 const getAmenityIcon = (amenity: string) => {
   const lowerAmenity = amenity.toLowerCase();
   if (lowerAmenity.includes('wifi')) return <Wifi className="h-4 w-4 mr-2 text-primary flex-shrink-0" />;
@@ -98,8 +184,7 @@ const getAmenityIcon = (amenity: string) => {
   if (lowerAmenity.includes('parking')) return <ParkingCircle className="h-4 w-4 mr-2 text-primary flex-shrink-0" />;
   if (lowerAmenity.includes('catering')) return <Utensils className="h-4 w-4 mr-2 text-primary flex-shrink-0" />;
   if (lowerAmenity.includes('climate') || lowerAmenity.includes('air conditioning')) return <Wind className="h-4 w-4 mr-2 text-primary flex-shrink-0" />;
-  if (lowerAmenity.includes('whiteboard') || lowerAmenity.includes('flipchart') || lowerAmenity.includes('markers')) return <CheckSquare className="h-4 w-4 mr-2 text-primary flex-shrink-0" />; // Example for whiteboard/etc
-  // Add more icons as needed
+  if (lowerAmenity.includes('whiteboard') || lowerAmenity.includes('flipchart') || lowerAmenity.includes('markers')) return <CheckSquare className="h-4 w-4 mr-2 text-primary flex-shrink-0" />;
   return <CheckSquare className="h-4 w-4 mr-2 text-primary flex-shrink-0" />; // Default icon
 }
 // --- End Amenities Helper ---
@@ -107,6 +192,7 @@ const getAmenityIcon = (amenity: string) => {
 
 // Main Component wrapper with Suspense
 export default function VenuePage() {
+  // Suspense remains useful for useSearchParams and potential future lazy loading
   return (
     <Suspense fallback={<VenueLoadingSkeleton />}>
       <Venue />
@@ -114,7 +200,7 @@ export default function VenuePage() {
   );
 }
 
-// Loading Skeleton Component
+// Loading Skeleton Component (Keep as Suspense fallback)
 function VenueLoadingSkeleton() {
  return (
     <div className="min-h-screen p-6 bg-background animate-pulse">
@@ -138,72 +224,55 @@ function VenueLoadingSkeleton() {
 }
 
 
-// The actual Venue component
+// The actual Venue component using Mock Data
 function Venue() {
   const searchParams = useSearchParams();
-  const venueId = searchParams.get('id');
+  const venueId = searchParams.get('id'); // This gets the documentId from the URL
 
-  const [venue, setVenue] = useState<Venue | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // State for the selected date in the calendar
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [promoCode, setPromoCode] = useState<string>(""); // Keep if needed
-  useEffect(() => {
-    const fetchVenue = async () => {
-      if (venueId && typeof venueId === 'string') { // Add this check
-        try {
-          // Fetch the specific venue - Ensure getVenue populates correctly
-          const response = await getVenue(venueId) as VenueResponse;
+  const [promoCode, setPromoCode] = useState<string>(""); // Keep if BookingForm uses it
 
-          if (response && response.data) {
-             setVenue(response.data);
-          } else {
-            console.error('Venue data not found:', response);
-            // Handle the case where venue data is not found appropriately
-          }
-        } catch (error) {
-          console.error('Error fetching venue:', error);
-          // Handle fetch error appropriately
-        } finally {
-          setLoading(false);
-        }
-      } else { // Handle the case where venueId is not a valid string
-        console.error('Invalid venueId:', venueId);
-        setLoading(false);
-        // Optionally, redirect or show an error message
-      }
-    };
+  // --- Find Venue Data ---
+  // Directly look up the venue from mock data based on the ID from URL
+  const venue: Venue | undefined = venueId ? mockVenueDetails[venueId] : undefined;
+  // ---
 
-    fetchVenue();
-  }, [venueId]); // Keep venueId in the dependency array
-  
   // --- Render States ---
-  if (loading) return <VenueLoadingSkeleton />;
-  if (error) return <div className="min-h-screen flex items-center justify-center text-red-600 p-6 text-center">Error: {error}</div>;
-  if (!venue) return <div className="min-h-screen flex items-center justify-center p-6 text-center">Venue not found or unavailable.</div>;
+  // No loading state needed for fetching
+  // Error state is now just if venue is not found in mock data
+  if (!venueId || !venue) {
+    return (
+        <div className="min-h-screen flex items-center justify-center p-6 text-center text-muted-foreground">
+            Venue not found or invalid ID specified. Please check the link or select a venue again.
+        </div>
+    );
+  }
 
   // --- Prepare Data for Rendering ---
-  const primaryImage = venue.images?.[0]; // Handles potentially missing 'images' array
-  const imageUrl = getImageUrl(primaryImage); // Will return placeholder if primaryImage is undefined
+  const primaryImage = venue.images?.[0]; // Use optional chaining
+  const imageUrl = getImageUrl(primaryImage); // Will use placeholder if no images defined in mock data
   const imageAlt = primaryImage?.alternativeText || venue.name || "Venue image";
 
-  // Safely access nested properties using optional chaining
+  // Safely access nested properties
   const setupLayouts = venue.setupOptions?.layouts || [];
   const setupEquipment = venue.setupOptions?.availableEquipment || [];
   const includedAmenities = venue.amenities?.included || [];
   const additionalServices = venue.amenities?.additionalServices || [];
 
-  // Split rules string into an array for rendering, handling potential null/undefined
-  const rulesList = venue.rules ? venue.rules.split('\n').map(line => line.trim().replace(/^- /, '')).filter(line => line !== '') : [];
+  // Split rules string into an array
+  const rulesList = venue.rules
+    ? venue.rules.split('\n').map(line => line.trim().replace(/^- /, '')).filter(line => line !== '')
+    : [];
 
 
-  // --- JSX Structure ---
+  // --- JSX Structure (Mostly Unchanged) ---
   return (
     <div className="min-h-screen p-6 bg-background">
       <main className="container mx-auto max-w-7xl relative mt-10 z-10">
         {/* Header Section */}
-        <div className="space-y-2 mb-8"> {/* Reduced vertical space */}
-           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{venue.name}</h1>           
+        <div className="space-y-2 mb-8">
+           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{venue.name}</h1>
         </div>
 
         {/* Main Content Grid */}
@@ -212,14 +281,14 @@ function Venue() {
           <div className="md:col-span-2 space-y-6 md:space-y-8">
              {/* Image Card */}
              <Card className="overflow-hidden shadow-md">
-                <div className="aspect-video relative bg-muted"> {/* Added bg-muted for placeholder state */}
+                <div className="aspect-video relative bg-muted">
                    <Image
-                        src={imageUrl}
+                        src={imageUrl} // Uses placeholder if mock data has no image
                         alt={imageAlt}
                         fill
                         className="object-cover"
-                        priority // Prioritize loading this main image
-                        sizes="(max-width: 768px) 100vw, 66vw" // Responsive sizes
+                        priority
+                        sizes="(max-width: 768px) 100vw, 66vw"
                     />
                 </div>
              </Card>
@@ -230,11 +299,10 @@ function Venue() {
                 <CardTitle>About {venue.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                {/* Use pre-wrap to respect newlines in the description */}
                 <p className="text-muted-foreground whitespace-pre-wrap mb-6">
                     {venue.description || 'No description available.'}
                 </p>
-
+                {/* Details Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 pt-4 border-t">
                   <div className="flex items-start gap-3">
                     <Users className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
@@ -250,7 +318,7 @@ function Venue() {
                     <div>
                       <p className="font-medium">Starting Price</p>
                       <p className="text-sm text-muted-foreground">
-                        ${venue.pricePerHour}/hour
+                        {venue.pricePerHour} SAR/hour {/* Updated currency */}
                       </p>
                     </div>
                   </div>
@@ -260,7 +328,7 @@ function Venue() {
 
             {/* Tabs Section */}
             <Tabs defaultValue="amenities" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-1"> {/* Added mb-1 */}
+              <TabsList className="grid w-full grid-cols-3 mb-1">
                 <TabsTrigger value="amenities">Amenities</TabsTrigger>
                 <TabsTrigger value="setup">Setup</TabsTrigger>
                 <TabsTrigger value="rules">Rules</TabsTrigger>
@@ -361,22 +429,25 @@ function Venue() {
              <Card className="shadow-lg">
                  <CardHeader>
                    <CardTitle>Book Your Date</CardTitle>
-                   <CardDescription>Check availability below</CardDescription>
+                   <CardDescription>Select a date to check times</CardDescription> {/* Updated description */}
                  </CardHeader>
                  <CardContent>
                    <Calendar
                      mode="single"
                      selected={selectedDate}
                      onSelect={setSelectedDate}
-                     className="rounded-md border flex justify-center p-0" // Adjusted padding
-                     // Consider adding disabled dates logic here based on bookings
+                     className="rounded-md border flex justify-center p-0"
+                     // TODO: Add logic to disable past dates or booked dates if needed
+                     // disabled={(date) => date < new Date() || bookedDates.includes(date.toISOString().split('T')[0])}
                    />
                    <div className="mt-4 space-y-4 border-t pt-4">
+                     {/* Pass necessary props to BookingForm */}
                      <BookingForm
-                       venueId={venue.id.toString()} // Ensure string ID
+                       venueId={venue.documentId} // Pass the string documentId     // Pass name for context
                        promoCode={promoCode}
                        selectedDate={selectedDate}
                        pricePerHour={venue.pricePerHour}
+                       // Add any other props BookingForm needs
                      />
                    </div>
                  </CardContent>
