@@ -251,9 +251,25 @@ function Venue() {
   }
 
   // --- Prepare Data for Rendering ---
-  const primaryImage = venue.images?.[0]; // Use optional chaining
-  const imageUrl = getImageUrl(primaryImage); // Will use placeholder if no images defined in mock data
-  const imageAlt = primaryImage?.alternativeText || venue.name || "Venue image";
+  let imageUrl: string;
+  let imageAlt: string;
+
+  const primaryImage = venue.images?.[0];
+
+  // Check if a specific image object with a URL is provided
+  if (primaryImage && (primaryImage.url || (primaryImage.formats && (primaryImage.formats.medium?.url || primaryImage.formats.small?.url || primaryImage.formats.thumbnail?.url)))) {
+    imageUrl = getImageUrl(primaryImage); // Use existing helper for complex image objects
+    imageAlt = primaryImage.alternativeText || venue.name || "Venue image";
+  } else {
+    // If no specific image object or it lacks a URL, derive from venue.name
+    // This assumes images are in the /public folder and named like 'venue-name.jpg'
+    const imageNameSlug = venue.name
+      .toLowerCase()
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/[^a-z0-9-]/g, ''); // Remove any non-alphanumeric characters except hyphens
+    imageUrl = `/${imageNameSlug}.jpg`;
+    imageAlt = venue.name || "Venue image";
+  }
 
   // Safely access nested properties
   const setupLayouts = venue.setupOptions?.layouts || [];

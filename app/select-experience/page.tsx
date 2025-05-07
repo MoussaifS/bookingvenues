@@ -28,25 +28,25 @@ const mockVenueData = [
         "updatedAt": "2025-04-30T11:34:10.565Z",
         "publishedAt": "2025-04-30T11:34:10.580Z"
     },
-    {
-        "id": 12,
-        "documentId": "vbjloesj4wtsklknq7mmv1ej",
-        "name": "Executive Meeting Room A",
-        "description": "Stylish lounge space with plush seating...",
-        "capacity": 12,
-        "pricePerHour": 75,
-        "setupOptions": { /* Omitted for brevity */ },
-        "amenities": { /* Omitted for brevity */ },
-        "rules": "- Minimum booking: 1 hour\n- 24-hour cancellation policy...",
-        "slug": "executive-meeting-room-a",
-        "cardTitle": "Executive Meeting Room", // Use this for filename
-        "cardDescription": "Stylish lounge space with plush seating, ideal for casual meetings or relaxed breakout sessions. Includes bottled water, coffee table, and ambient lighting.",
-        "cardFeatures": "Video conferencing | Projector | Catering Available",
-        "spaceType": "meeting room",
-        "createdAt": "2025-03-02T00:52:28.680Z",
-        "updatedAt": "2025-04-30T13:37:18.515Z",
-        "publishedAt": "2025-04-30T13:37:18.531Z"
-    },
+    // {
+    //     "id": 12,
+    //     "documentId": "vbjloesj4wtsklknq7mmv1ej",
+    //     "name": "Executive Meeting Room A",
+    //     "description": "Stylish lounge space with plush seating...",
+    //     "capacity": 12,
+    //     "pricePerHour": 75,
+    //     "setupOptions": { /* Omitted for brevity */ },
+    //     "amenities": { /* Omitted for brevity */ },
+    //     "rules": "- Minimum booking: 1 hour\n- 24-hour cancellation policy...",
+    //     "slug": "executive-meeting-room-a",
+    //     "cardTitle": "Executive Meeting Room A", // Use this for filename
+    //     "cardDescription": "Stylish lounge space with plush seating, ideal for casual meetings or relaxed breakout sessions. Includes bottled water, coffee table, and ambient lighting.",
+    //     "cardFeatures": "Video conferencing | Projector | Catering Available",
+    //     "spaceType": "meeting room",
+    //     "createdAt": "2025-03-02T00:52:28.680Z",
+    //     "updatedAt": "2025-04-30T13:37:18.515Z",
+    //     "publishedAt": "2025-04-30T13:37:18.531Z"
+    // },
     {
         "id": 13,
         "documentId": "g642gvihycua2ntbwbu7qrxk",
@@ -107,10 +107,10 @@ export default function SelectExperience() {
       <main className="flex flex-col w-full max-w-6xl mx-auto">
         {/* Header */}
          <div className="flex flex-col items-center mb-8 w-full text-center">
-          {/* Make sure the logo exists in /public/logo_lamarka.svg */}
+          {/* Make sure the logo exists in /public/logo_Neonexus.svg */}
           <Image
-            src="/logo_lamarka.svg"
-            alt="lamarka logo"
+            src="/logo_Neonexus.svg"
+            alt="Neonexus logo"
             width={120}
             height={25}
             className="mb-8 sm:mb-10"

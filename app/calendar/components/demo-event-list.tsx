@@ -36,7 +36,7 @@ const demoEvents = [
     date: "December 5, 2024",
     time: "2:00 PM - 4:00 PM",
     venue: "Executive Meeting Room B",
-    host: "Lamarka Insights",
+    host: "Neonexus Insights",
     description: "Panel discussion on how Artificial Intelligence is reshaping property management, valuation, and development.",
   },
 ];
