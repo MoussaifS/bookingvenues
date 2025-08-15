@@ -136,7 +136,7 @@ export function BookingForm({
 
       form.reset(); // Reset form fields
       // Optionally close the dialog after success
-      // You might need to manage the Dialog's open state from the parent component
+      // You might need to manage the Dialog's open state from the parent componentz
       // or use a ref if keeping it self-contained.
 
     } catch (error) {

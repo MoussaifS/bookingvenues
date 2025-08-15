@@ -27,7 +27,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+  className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col pb-20 md:pb-0`}
       > 
         <Navbar/>
         <Toaster position="top-center" richColors /> {/* Add sonner's Toaster */}

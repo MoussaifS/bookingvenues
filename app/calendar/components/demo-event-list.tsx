@@ -4,13 +4,15 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 // import { Badge } from "@/components/ui/badge";
 import { CalendarDays, MapPin, Clock } from "lucide-react";
+import { EventDetailsDialog } from './event-details-dialog'
+import type { EventDemo } from '../../../types/event'; // Adjust the import path as necessary
 // *** CHANGE HERE: Import toast directly from sonner ***
 import { toast } from 'sonner';
 // *** REMOVE: No longer need useToast from shadcn/ui ***
 // import { useToast } from "@/components/ui/use-toast";
 
 // --- Demo Data (Static) ---
-const demoEvents = [
+const demoEvents: EventDemo[] = [
   // ... (demoEvents array remains the same) ...
   {
     id: 1,
@@ -20,6 +22,11 @@ const demoEvents = [
     venue: "Grand Conference Hall",
     host: "KSA Blockchain Collective",
     description: "Connect with developers, founders, and enthusiasts exploring the future of decentralized tech in the Kingdom.",
+    address: 'King Abdullah Financial District, Riyadh, Saudi Arabia',
+    latitude: 24.763565,
+    longitude: 46.650967,
+    managerEmail: 'organizer1@example.com',
+    managerName: 'Aisha'
   },
   {
     id: 2,
@@ -29,6 +36,11 @@ const demoEvents = [
     venue: "Exhibition Space",
     host: "Vision Ventures KSA",
     description: "Discover promising early-stage Saudi tech startups seeking investment and partnerships. Keynotes and networking sessions.",
+    address: 'Olaya Street, Riyadh, Saudi Arabia',
+    latitude: 24.690461,
+    longitude: 46.685379,
+    managerEmail: 'organizer2@example.com',
+    managerName: 'Fahad'
   },
   {
     id: 3,
@@ -38,6 +50,11 @@ const demoEvents = [
     venue: "Executive Meeting Room B",
     host: "Neonexus Insights",
     description: "Panel discussion on how Artificial Intelligence is reshaping property management, valuation, and development.",
+    address: 'Digital City, Riyadh, Saudi Arabia',
+    latitude: 24.746189,
+    longitude: 46.663017,
+    managerEmail: 'organizer3@example.com',
+    managerName: 'Sara'
   },
 ];
 // --- End Demo Data ---
@@ -83,9 +100,9 @@ export function DemoEventList() {
             </CardContent>
 
             {/* CardFooter now contains a clickable div */}
-            <CardFooter>
+            <CardFooter className="flex gap-2 flex-wrap">
               <div
-                className="w-full text-center py-2 px-4 bg-secondary text-secondary-foreground rounded-md cursor-pointer hover:bg-secondary/80 transition-colors text-sm font-medium"
+                className="flex-1 text-center py-2 px-4 bg-secondary text-secondary-foreground rounded-md cursor-pointer hover:bg-secondary/80 transition-colors text-sm font-medium"
                 onClick={showDemoToast} // Calls the updated function
                 role="button"
                 tabIndex={0}
@@ -93,6 +110,7 @@ export function DemoEventList() {
               >
                 Reserve Spot (Demo)
               </div>
+              <EventDetailsDialog event={event} />
             </CardFooter>
           </Card>
         ))}

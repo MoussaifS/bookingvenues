@@ -155,6 +155,14 @@ const mockVenueDetails: { [key: string]: Venue } = {
 };
 // --- END MOCK VENUE DETAILS ---
 
+// Map venue documentIds to static images stored in public/static/images
+// Filenames have spaces and uppercase letters; we'll URI-encode spaces.
+const venueImageMap: Record<string, string> = {
+  rn3uij5x3ee3mxldladrisu7: "/static/images/Executive%20Meeting%20Room%20B.JPG",
+  g642gvihycua2ntbwbu7qrxk: "/static/images/Grand%20Conference%20Hall.JPG",
+  vbjloesj4wtsklknq7mmv1ej: "/static/images/Executive%20Meeting%20Room%20A.JPG",
+};
+
 
 // --- Helper Function to get Image URL (remains useful for consistency/placeholders) ---
 const getImageUrl = (image: ImageObject | undefined): string => {
@@ -255,18 +263,20 @@ function Venue() {
   let imageAlt: string;
 
   const primaryImage = venue.images?.[0];
-
-  // Check if a specific image object with a URL is provided
-  if (primaryImage && (primaryImage.url || (primaryImage.formats && (primaryImage.formats.medium?.url || primaryImage.formats.small?.url || primaryImage.formats.thumbnail?.url)))) {
-    imageUrl = getImageUrl(primaryImage); // Use existing helper for complex image objects
+  // 1. Prefer explicit static mapping for reliability
+  if (venueImageMap[venue.documentId]) {
+    imageUrl = venueImageMap[venue.documentId];
+    imageAlt = venue.name || "Venue image";
+  } else if (primaryImage && (primaryImage.url || (primaryImage.formats && (primaryImage.formats.medium?.url || primaryImage.formats.small?.url || primaryImage.formats.thumbnail?.url)))) {
+    // 2. Use provided image object (if later real data supplies it)
+    imageUrl = getImageUrl(primaryImage);
     imageAlt = primaryImage.alternativeText || venue.name || "Venue image";
   } else {
-    // If no specific image object or it lacks a URL, derive from venue.name
-    // This assumes images are in the /public folder and named like 'venue-name.jpg'
+    // 3. Fallback slug-based heuristic (may 404 if file not present)
     const imageNameSlug = venue.name
       .toLowerCase()
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/[^a-z0-9-]/g, ''); // Remove any non-alphanumeric characters except hyphens
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
     imageUrl = `/${imageNameSlug}.jpg`;
     imageAlt = venue.name || "Venue image";
   }
@@ -285,15 +295,15 @@ function Venue() {
 
   // --- JSX Structure (Mostly Unchanged) ---
   return (
-    <div className="min-h-screen p-6 bg-background">
-      <main className="container mx-auto max-w-7xl relative mt-10 z-10">
+    <div className="min-h-screen  pt-10 md:pt-0  bg-background">
+      <main className="container mx-auto max-w-7xl relative z-10 pt-20 md:pt-10 pb-4 md:pb-10">
         {/* Header Section */}
         <div className="space-y-2 mb-8">
            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{venue.name}</h1>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 pb-8 md:pb-0">
           {/* Left/Main Column */}
           <div className="md:col-span-2 space-y-6 md:space-y-8">
              {/* Image Card */}
@@ -442,21 +452,21 @@ function Venue() {
           </div>
 
           {/* Right Column - Booking Section */}
-          <div className="space-y-6 md:sticky md:top-8 md:h-[calc(100vh-4rem)]">
+          <div className="space-y-6 md:sticky md:top-24 md:h-[calc(100vh-6rem)]">
              <Card className="shadow-lg">
                  <CardHeader>
                    <CardTitle>Book Your Date</CardTitle>
                    <CardDescription>Select a date to check times</CardDescription> {/* Updated description */}
                  </CardHeader>
                  <CardContent>
-                   <Calendar
-                     mode="single"
-                     selected={selectedDate}
-                     onSelect={setSelectedDate}
-                     className="rounded-md border flex justify-center p-0"
-                     // TODO: Add logic to disable past dates or booked dates if needed
-                     // disabled={(date) => date < new Date() || bookedDates.includes(date.toISOString().split('T')[0])}
-                   />
+                   <div className="flex justify-center">
+                     <Calendar
+                       mode="single"
+                       selected={selectedDate}
+                       onSelect={setSelectedDate}
+                       className="rounded-md border p-2 w-full max-w-xs sm:max-w-none"
+                     />
+                   </div>
                    <div className="mt-4 space-y-4 border-t pt-4">
                      {/* Pass necessary props to BookingForm */}
                      <BookingForm
